@@ -1,0 +1,118 @@
+{% extends 'cart/base.html' %}
+
+{% block title %}My Orders - ShopCart{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <h1 class="mb-4">📜 My Orders</h1>
+
+    {% if orders %}
+        <div class="row">
+            {% for order in orders %}
+                <div class="col-md-12 mb-3">
+                    <div class="card">
+                        <div class="card-body">
+                            <div class="row align-items-center">
+                                <!-- Order Info -->
+                                <div class="col-md-4">
+                                    <h6 class="text-muted mb-1">Order Number</h6>
+                                    <h5 class="mb-3 text-success fw-bold">{{ order.order_id }}</h5>
+                                    
+                                    <h6 class="text-muted mb-1">Order Date</h6>
+                                    <p class="mb-3">{{ order.order_date|date:"M d, Y H:i" }}</p>
+                                </div>
+
+                                <!-- Items Count -->
+                                <div class="col-md-2">
+                                    <h6 class="text-muted mb-1">Items</h6>
+                                    <p class="mb-3">{{ order.items.count }} Product(s)</p>
+                                    
+                                    <h6 class="text-muted mb-1">Total</h6>
+                                    <h5 class="text-success">₹{{ order.total_amount|floatformat:0 }}</h5>
+                                </div>
+
+                                <!-- Status -->
+                                <div class="col-md-3">
+                                    <h6 class="text-muted mb-1">Order Status</h6>
+                                    <p class="mb-1">
+                                        {% if order.status == 'pending' %}
+                                            <span class="badge bg-warning">⏳ Pending</span>
+                                        {% elif order.status == 'confirmed' %}
+                                            <span class="badge bg-info">✓ Confirmed</span>
+                                        {% elif order.status == 'shipped' %}
+                                            <span class="badge bg-primary">📦 Shipped</span>
+                                        {% elif order.status == 'delivered' %}
+                                            <span class="badge bg-success">✅ Delivered</span>
+                                        {% elif order.status == 'cancelled' %}
+                                            <span class="badge bg-danger">✗ Cancelled</span>
+                                        {% else %}
+                                            <span class="badge bg-secondary">{{ order.get_status_display }}</span>
+                                        {% endif %}
+                                    </p>
+
+                                    <h6 class="text-muted mb-1">Payment</h6>
+                                    <p>
+                                        {% if order.payment_status == 'completed' %}
+                                            <span class="badge bg-success">✓ Paid</span>
+                                        {% elif order.payment_status == 'pending' %}
+                                            <span class="badge bg-warning">⏳ Pending</span>
+                                        {% else %}
+                                            <span class="badge bg-danger">Failed</span>
+                                        {% endif %}
+                                    </p>
+                                </div>
+
+                                <!-- Actions -->
+                                <div class="col-md-3 text-end">
+                                    <a href="{% url 'order_detail' order.id %}" class="btn btn-info btn-sm mb-2">View Details</a>
+                                    
+                                    {% if order.status == 'delivered' %}
+                                        <a href="#" class="btn btn-warning btn-sm mb-2" data-bs-toggle="modal" data-bs-target="#reviewModal{{ order.id }}">
+                                            ⭐ Review
+                                        </a>
+                                    {% endif %}
+
+                                    <button class="btn btn-secondary btn-sm mb-2" onclick="alert('Feature coming soon!')">
+                                        🔄 Reorder
+                                    </button>
+
+                                    {% if order.status != 'delivered' and order.status != 'cancelled' %}
+                                        <button class="btn btn-danger btn-sm" onclick="if(confirm('Cancel order?')) { alert('Cancellation request submitted'); }">
+                                            ✗ Cancel
+                                        </button>
+                                    {% endif %}
+                                </div>
+                            </div>
+
+                            <!-- Items Preview -->
+                            <hr class="my-2">
+                            <div class="row">
+                                {% for item in order.items.all|slice:":3" %}
+                                    <div class="col-md-4">
+                                        <small class="text-muted">{{ item.product.name }}</small><br>
+                                        <small>Qty: {{ item.quantity }} × ₹{{ item.price|floatformat:0 }}</small>
+                                    </div>
+                                {% endfor %}
+                                {% if order.items.count > 3 %}
+                                    <div class="col-md-4">
+                                        <small class="text-muted">+{{ order.items.count|add:"-3" }} more items</small>
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="alert alert-info text-center py-5">
+            <h4>No Orders Yet</h4>
+            <p>You haven't placed any orders yet. Start shopping now!</p>
+            <a href="{% url 'home' %}" class="btn btn-primary btn-lg">
+                🛍️ Continue Shopping
+            </a>
+        </div>
+    {% endif %}
+</div>
+
+{% endblock %}

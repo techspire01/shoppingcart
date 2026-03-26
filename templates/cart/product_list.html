@@ -1,0 +1,82 @@
+{% extends 'cart/base.html' %}
+
+{% block title %}Products - ShopCart{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Search Section -->
+    <div class="search-section">
+        <div class="row">
+            <div class="col-md-6">
+                <form method="GET" class="d-flex gap-2">
+                    <input type="text" name="q" class="form-control" placeholder="Search products..." value="{{ query }}">
+                    <button type="submit" class="btn btn-primary">Search</button>
+                </form>
+            </div>
+            <div class="col-md-6 text-end">
+                <a href="{% url 'home' %}" class="btn btn-secondary">Clear Filters</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Filters Sidebar -->
+        <div class="col-md-3">
+            <div class="filters">
+                <h5>Categories</h5>
+                <div class="list-group">
+                    <a href="{% url 'home' %}" class="list-group-item list-group-item-action {% if not selected_category %}active{% endif %}">
+                        All Categories
+                    </a>
+                    {% for category in categories %}
+                        <a href="?category={{ category.id }}" class="list-group-item list-group-item-action {% if selected_category == category.id|stringformat:'s' %}active{% endif %}">
+                            {{ category.name }}
+                        </a>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Products Grid -->
+        <div class="col-md-9">
+            {% if products %}
+                <div class="row g-4">
+                    {% for product in products %}
+                        <div class="col-md-6 col-lg-4">
+                            <div class="card product-card">
+                                {% if product.image %}
+                                    <img src="{{ product.image.url }}" alt="{{ product.name }}" class="card-img-top product-image">
+                                {% else %}
+                                    <div class="card-img-top product-image d-flex align-items-center justify-content-center" style="background-color: #e9ecef;">
+                                        <span class="text-muted">No Image</span>
+                                    </div>
+                                {% endif %}
+                                <div class="card-body">
+                                    <h5 class="card-title">{{ product.name }}</h5>
+                                    <p class="card-text text-muted small">{{ product.description|truncatewords:15 }}</p>
+                                    <p class="price">${{ product.price }}</p>
+                                    <p class="text-muted small">{{ product.category.name }}</p>
+                                </div>
+                                <div class="card-footer bg-white border-top">
+                                    <a href="{% url 'product_detail' product.id %}" class="btn btn-info btn-sm w-100 mb-2">View Details</a>
+                                    {% if user.is_authenticated %}
+                                        <a href="{% url 'add_to_cart' product.id %}" class="btn btn-success btn-sm w-100">Add to Cart</a>
+                                    {% else %}
+                                        <a href="{% url 'login' %}" class="btn btn-success btn-sm w-100">Add to Cart</a>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="alert alert-info text-center" role="alert">
+                    <h4>No products found</h4>
+                    <p>Try adjusting your search or filters.</p>
+                    <a href="{% url 'home' %}" class="btn btn-primary">View All Products</a>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

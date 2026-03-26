@@ -1,0 +1,206 @@
+{% extends 'cart/base.html' %}
+
+{% block title %}Checkout - ShopCart{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <h1 class="mb-4">🛒 Checkout</h1>
+
+    <div class="row">
+        <!-- Order Summary (Left) -->
+        <div class="col-md-8">
+            <div class="card mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">1️⃣ Delivery Address</h5>
+                </div>
+                <div class="card-body">
+                    {% if addresses %}
+                        <form method="POST" action="{% url 'place_order' %}" id="checkoutForm">
+                            {% csrf_token %}
+                            
+                            <!-- Address Selection -->
+                            <div class="mb-3">
+                                <h6>Select Delivery Address</h6>
+                                <div class="row g-2">
+                                    {% for address in addresses %}
+                                        <div class="col-md-6">
+                                            <div class="form-check">
+                                                <input class="form-check-input address-radio" type="radio" name="address" 
+                                                       value="{{ address.id }}" id="address{{ address.id }}"
+                                                       {% if default_address.id == address.id %}checked{% endif %}{% if forloop.first and not default_address %}checked{% endif %}
+                                                       required>
+                                                <label class="form-check-label" for="address{{ address.id }}">
+                                                    <div class="card p-2">
+                                                        <strong>{{ address.get_address_type_display|title }}</strong><br>
+                                                        {{ address.street_address }}{% if address.apartment %}, {{ address.apartment }}{% endif %}<br>
+                                                        {{ address.city }}, {{ address.state }} - {{ address.zip_code }}<br>
+                                                        <small class="text-muted">📱 {{ address.phone }}</small>
+                                                    </div>
+                                                </label>
+                                            </div>
+                                        </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+
+                            <!-- Add New Address -->
+                            <div class="mb-3">
+                                <a href="{% url 'add_address' %}" class="btn btn-outline-primary btn-sm">+ Add New Address</a>
+                            </div>
+
+                            <!-- Payment Method -->
+                            <hr class="my-4">
+                            <h6>2️⃣ Payment Method</h6>
+                            
+                            <div class="row g-3">
+                                {% for method, label in payment_methods %}
+                                    <div class="col-md-6">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="radio" name="payment_method" 
+                                                   value="{{ method }}" id="payment{{ method }}"
+                                                   {% if method == 'cod' %}checked{% endif %}>
+                                            <label class="form-check-label" for="payment{{ method }}">
+                                                <div class="card p-2">
+                                                    {{ label }}
+                                                </div>
+                                            </label>
+                                        </div>
+                                    </div>
+                                {% endfor %}
+                            </div>
+
+                            <!-- Order Notes -->
+                            <hr class="my-4">
+                            <div class="mb-3">
+                                <label class="form-label">Special Instructions (Optional)</label>
+                                <textarea name="special_instructions" class="form-control" rows="2" 
+                                          placeholder="e.g., Ring doorbell twice..."></textarea>
+                            </div>
+                    {% else %}
+                        <div class="alert alert-warning">
+                            <p class="mb-0">No delivery address found. <a href="{% url 'add_address' %}" class="alert-link">Add one now</a></p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Order Items Review -->
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">3️⃣ Order Review</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Product</th>
+                                    <th>Price</th>
+                                    <th>Qty</th>
+                                    <th>Total</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for item in items %}
+                                    <tr>
+                                        <td>
+                                            <strong>{{ item.product.name }}</strong>
+                                            <br>
+                                            <small class="text-muted">{{ item.product.category.name }}</small>
+                                        </td>
+                                        <td>₹{{ item.product.get_current_price|floatformat:0 }}</td>
+                                        <td>{{ item.quantity }}</td>
+                                        <td class="fw-bold">₹{{ item.get_total|floatformat:0 }}</td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Order Summary (Right) -->
+        <div class="col-md-4">
+            <div class="card sticky-top" style="top: 20px;">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0">Order Summary</h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Subtotal:</span>
+                        <strong>₹{{ subtotal|floatformat:0 }}</strong>
+                    </div>
+
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Shipping:</span>
+                        <strong>
+                            {% if shipping == 0 %}
+                                <span class="text-success">FREE</span>
+                            {% else %}
+                                ₹{{ shipping|floatformat:0 }}
+                            {% endif %}
+                        </strong>
+                    </div>
+
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Tax (5%):</span>
+                        <strong>₹{{ tax|floatformat:0 }}</strong>
+                    </div>
+
+                    <hr>
+
+                    <div class="d-flex justify-content-between mb-4">
+                        <h5 class="mb-0">Total:</h5>
+                        <h5 class="text-success mb-0">₹{{ total|floatformat:0 }}</h5>
+                    </div>
+
+                    {% if addresses %}
+                        <button type="submit" form="checkoutForm" class="btn btn-success btn-lg w-100 fw-bold" 
+                                onclick="validateAndSubmit()">
+                            Place Order
+                        </button>
+                    {% endif %}
+                        </form>
+
+                    <a href="{% url 'cart' %}" class="btn btn-outline-secondary w-100 mt-2">Back to Cart</a>
+
+                    <!-- Offers -->
+                    <div class="alert alert-info mt-3">
+                        <small>
+                            💳 Pay with UPI for extra 5% cashback<br>
+                            🎁 Free gift with order > ₹1000<br>
+                            ⭐ 30-day easy returns
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function validateAndSubmit() {
+    const addressRadios = document.querySelectorAll('input[name="address"]');
+    const selectedAddress = Array.from(addressRadios).find(radio => radio.checked);
+    
+    if (!selectedAddress || !selectedAddress.value) {
+        alert('❌ Please select a delivery address before placing order');
+        return false;
+    }
+    
+    // Form is valid, submit it
+    return true;
+}
+
+// Auto-select first address on page load if none is selected
+document.addEventListener('DOMContentLoaded', function() {
+    const addressRadios = document.querySelectorAll('input[name="address"]');
+    const anySelected = Array.from(addressRadios).some(radio => radio.checked);
+    
+    if (!anySelected && addressRadios.length > 0) {
+        addressRadios[0].checked = true;
+    }
+});
+</script>
+{% endblock %}

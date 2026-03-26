@@ -1,0 +1,71 @@
+{% extends 'cart/base.html' %}
+
+{% block title %}My Wishlist - ShopCart{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <h1 class="mb-4">❤️ My Wishlist</h1>
+
+    {% if items %}
+        <div class="row g-4">
+            {% for item in items %}
+                <div class="col-md-6 col-lg-4">
+                    <div class="card product-card h-100">
+                        {% if item.product.image %}
+                            <img src="{{ item.product.image.url }}" alt="{{ item.product.name }}" class="card-img-top product-image">
+                        {% else %}
+                            <div class="card-img-top product-image d-flex align-items-center justify-content-center" style="background-color: #e9ecef;">
+                                <span class="text-muted">No Image</span>
+                            </div>
+                        {% endif %}
+                        
+                        <div class="card-body">
+                            <h5 class="card-title">{{ item.product.name }}</h5>
+                            
+                            <!-- Rating -->
+                            <div class="mb-2">
+                                <span class="badge bg-success">⭐ {{ item.product.rating|floatformat:1 }}</span>
+                                <small class="text-muted">({{ item.product.review_count }})</small>
+                            </div>
+
+                            <!-- Price -->
+                            <div class="mb-3">
+                                <p class="price mb-0">₹{{ item.product.get_current_price|floatformat:0 }}</p>
+                                {% if item.product.discount_price %}
+                                    <small class="text-muted"><del>₹{{ item.product.price|floatformat:0 }}</del></small>
+                                    <span class="badge bg-danger">{{ item.product.get_discount_percent }}% OFF</span>
+                                {% endif %}
+                            </div>
+
+                            <!-- Stock Status -->
+                            {% if item.product.stock > 0 %}
+                                <span class="badge bg-success mb-2">In Stock</span>
+                            {% else %}
+                                <span class="badge bg-danger mb-2">Out of Stock</span>
+                            {% endif %}
+                        </div>
+
+                        <div class="card-footer bg-white p-2 d-grid gap-2">
+                            <a href="{% url 'product_detail' item.product.id %}" class="btn btn-info btn-sm">View Details</a>
+                            {% if item.product.stock > 0 %}
+                                <a href="{% url 'add_to_cart' item.product.id %}" class="btn btn-success btn-sm">Add to Cart</a>
+                            {% else %}
+                                <button class="btn btn-secondary btn-sm" disabled>Out of Stock</button>
+                            {% endif %}
+                            <a href="{% url 'remove_from_wishlist' item.id %}" class="btn btn-danger btn-sm" onclick="return confirm('Remove from wishlist?')">Remove</a>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="alert alert-info text-center py-5" role="alert">
+            <h4>Your wishlist is empty</h4>
+            <p>Start adding products to your wishlist to save them for later!</p>
+            <a href="{% url 'home' %}" class="btn btn-primary btn-lg mt-3">
+                Continue Shopping
+            </a>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

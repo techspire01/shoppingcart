@@ -1,0 +1,68 @@
+{% extends 'cart/base.html' %}
+
+{% block title %}My Addresses - ShopCart{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h1>📍 My Addresses</h1>
+        </div>
+        <div class="col-md-4 text-end">
+            <a href="{% url 'add_address' %}" class="btn btn-success">+ Add New Address</a>
+        </div>
+    </div>
+
+    {% if addresses %}
+        <div class="row g-3">
+            {% for address in addresses %}
+                <div class="col-md-6">
+                    <div class="card h-100 {% if address.is_default %}border-success{% endif %}">
+                        {% if address.is_default %}
+                            <div class="card-header bg-success text-white">
+                                <span class="badge bg-light text-dark">✓ Default Address</span>
+                            </div>
+                        {% endif %}
+                        <div class="card-body">
+                            <h5 class="card-title">{{ address.get_address_type_display|title }}</h5>
+                            
+                            <p class="card-text">
+                                <strong>{{ address.street_address }}</strong><br>
+                                {% if address.apartment %}
+                                    {{ address.apartment }}<br>
+                                {% endif %}
+                                {{ address.city }}, {{ address.state }} - {{ address.zip_code }}<br>
+                                {{ address.country }}
+                            </p>
+
+                            <p class="mb-0">
+                                <strong>📱 Phone:</strong> {{ address.phone }}
+                            </p>
+                        </div>
+                        <div class="card-footer bg-light">
+                            <button class="btn btn-sm btn-warning" onclick="alert('Edit feature coming soon!')">
+                                ✏️ Edit
+                            </button>
+                            <button class="btn btn-sm btn-danger" onclick="if(confirm('Delete this address?')) { alert('Address deleted'); }">
+                                🗑️ Delete
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="alert alert-info text-center py-5">
+            <h4>No Addresses Yet</h4>
+            <p>Add a delivery address to proceed with checkout.</p>
+            <a href="{% url 'add_address' %}" class="btn btn-primary btn-lg">
+                + Add Address
+            </a>
+        </div>
+    {% endif %}
+
+    <div class="mt-5">
+        <a href="{% url 'home' %}" class="btn btn-outline-secondary">← Back to Shopping</a>
+    </div>
+</div>
+{% endblock %}
